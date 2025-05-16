@@ -174,11 +174,19 @@
                 padding: 1.5rem;
             }
         }
+        .header h1 a:hover {
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+            transition: text-shadow 0.3s ease;
+        }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>Online Chat by SEREGA</h1>
+        <h1>
+            <a href="{{ url_for('main_page') }}" style="color: white; text-decoration: none;">
+                Online Chat by SEREGA
+            </a>
+        </h1>
     </header>
 
     <main class="main-content">

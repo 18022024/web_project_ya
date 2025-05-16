@@ -226,6 +226,7 @@ def create_room():
         type: string
         required: false
         description: Room password (if private)
+        description: Room password (if private)
     responses:
       200:
         description: Room creation form or success message
