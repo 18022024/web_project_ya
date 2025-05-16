@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Chat by SEREGA</title>
+    <link rel="icon" href="{{ url_for('static', filename='icon.png') }}" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 a:hover {
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+            transition: text-shadow 0.3s ease;
+        }
+
+        .auth-buttons {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.2rem;
+            border-radius: 5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: white;
+            color: #6e8efb;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            min-height: 60vh;
+            text-align: center;
+        }
+
+        .welcome-message {
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6e8efb;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .auth-buttons, .user-info {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .header {
+                padding-bottom: 2rem;
+            }
+            .room-private-badge {
+                display: inline-block;
+                background: #f1c40f;
+                color: #333;
+                padding: 0.2rem 0.5rem;
+                border-radius: 3px;
+                font-size: 0.7rem;
+                margin-top: 0.5rem;
+            }
+
+            .fa-lock {
+                margin-right: 0.3rem;
+            }
+        }
+    .rooms-container {
+        width: 100%;
+        margin: 20px 0;
+    }
+
+    .rooms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .room-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        border: 2px solid #e9e3ff;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .room-card:hover {
+        border-color: #a777e3;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(110, 142, 251, 0.1);
+    }
+
+    .room-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .room-header h3 {
+        color: #333;
+        font-size: 1.2rem;
+        margin: 0;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .room-private-badge {
+        background: #f3f0ff;
+        color: #6e8efb;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
+
+    .room-private-badge i {
+        margin-right: 5px;
+        font-size: 0.7rem;
+    }
+
+    .room-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .room-meta span {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .room-meta i {
+        margin-right: 5px;
+        font-size: 0.8rem;
+        color: #a777e3;
+    }
+
+    .btn-join {
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-join:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(110, 142, 251, 0.3);
+    }
+
+    .btn-join i {
+        margin-left: 8px;
+        font-size: 0.9rem;
+        transition: transform 0.3s;
+    }
+
+    .btn-join:hover i {
+        transform: translateX(3px);
+    }
+
+    @media (min-width: 1200px) {
+        .rooms-grid {
+            grid-template-columns: repeat(4, minmax(250px, 1fr));
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .rooms-grid {
+            grid-template-columns: repeat(3, minmax(250px, 1fr));
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 991px) {
+        .rooms-grid {
+            grid-template-columns: repeat(2, minmax(250px, 1fr));
+        }
+    }
+
+    @media (max-width: 575px) {
+        .rooms-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .room-card {
+            max-width: 100%;
+        }
+    }
+
+    .flash-messages {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .flash-message {
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out forwards;
+        transform: translateX(120%);
+        opacity: 0;
+        position: relative;
+        overflow: hidden;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+    }
+
+    .flash-message::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+    }
+
+    .flash-message.success {
+        border-left: 4px solid #689f38;
+        background-color: #f1f8e9;
+    }
+
+    .flash-message.error {
+        border-left: 4px solid #d32f2f;
+        background-color: #ffebee;
+    }
+
+    .flash-message.warning {
+        border-left: 4px solid #ffa000;
+        background-color: #fff8e1;
+    }
+
+    .flash-message.info {
+        border-left: 4px solid #0288d1;
+        background-color: #e1f5fe;
+    }
+
+    .flash-message .message-content {
+        flex-grow: 1;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .flash-message .close {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 1.1rem;
+        margin-left: 12px;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        padding: 4px;
+    }
+
+    .flash-message .close:hover {
+        opacity: 1;
+        color: #333;
+    }
+
+    @keyframes slideIn {
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: translateX(120%);
+        }
+    }
+
+    .flash-message.hide {
+        animation: fadeOut 0.3s ease-in forwards;
+    }
+
+    @media (max-width: 768px) {
+        .flash-messages {
+            max-width: calc(100% - 40px);
+            left: 20px;
+            right: 20px;
+            top: 10px;
+        }
+
+        .flash-message {
+            padding: 12px 15px;
+        }
+    }
+
+    .flash-message .progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        background-color: rgba(0,0,0,0.1);
+        width: 100%;
+        transform-origin: left;
+        animation: progress 5s linear forwards;
+    }
+
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    <header class="header">
+        <h1>
+            <a href="{{ url_for('main_page') }}" style="color: white; text-decoration: none;">
+                Online Chat by SEREGA
+            </a>
+        </h1>
+
+        {% if current_user.is_authenticated %}
+        <div class="user-info">
+            <div class="user-avatar">{{ current_user.username[0]|upper }}</div>
+            <a href="{{ url_for('profile_page') }}" style="color: white; text-decoration: none;">
+                <span>{{ current_user.username }}</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </a>
+        </div>
+        {% endif %}
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <footer class="footer">
+        <p>&copy; 2025 Online Chat by SEREGA. All rights reserved.</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(msg => {
+            setTimeout(() => {
+                msg.classList.add('hide');
+                setTimeout(() => msg.remove(), 300);
+            }, 2000);
+        });
+
+        document.querySelectorAll('.flash-message .close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.classList.add('hide');
+                setTimeout(() => this.parentElement.remove(), 300);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

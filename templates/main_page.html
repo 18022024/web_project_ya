@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+        <div class="chat-container">
+            {% if current_user.is_authenticated %}
+                <div class="chat-actions">
+                    <a href="{{ url_for('create_room') }}" class="btn btn-create-room">
+                        <i class="fas fa-plus"></i> Создать комнату
+                    </a>
+
+                <form method="GET" action="{{ url_for('search_rooms') }}" class="search-form">
+                    <div class="search-container">
+                        <input type="text" name="query" placeholder="Поиск комнат..."
+                               value="{{ request.args.get('query', '') }}" class="search-input">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+                <div class="rooms-list">
+                    <h3>Список комнат</h3>
+
+                    {% if rooms %}
+                        <div class="rooms-container">
+                            <div class="rooms-grid">
+                                {% for room in rooms %}
+                                <div class="room-card">
+                                    <div class="room-header">
+                                        <h3>{{ room.name }}</h3>
+                                        {% if room.is_private %}
+                                            <span class="room-private-badge">
+                                                <i class="fas fa-lock"></i> Приватная
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="room-meta">
+                                        <span class="room-creator">
+                                            <i class="fas fa-user"></i> {{ room.user.username }}
+                                        </span>
+                                        <span class="room-date">
+                                            <i class="far fa-calendar-alt"></i> {{ room.created_at.strftime('%d.%m.%Y') }}
+                                        </span>
+                                    </div>
+
+                                    <a href="{% if room.is_private %}{{ url_for('enter_private_room', room_id=room.id) }}{% else %}{{ url_for('join_room', room_id=room.id) }}{% endif %}"
+                                       class="btn-join">
+                                        Присоединиться <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <p style="color:#9da19e">тут пусто...</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="welcome-message">
+                    <h2>Добро пожаловать в онлайн-чат!</h2>
+                    <p>Для доступа к чату войдите в систему или зарегистрируйтесь</p>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 1rem;">
+                    <a href="/login" class="btn btn-primary">Войти</a>
+                    <a href="/register" class="btn" style="background: #a777e3; color: white;">Зарегистрироваться</a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+<style>
+    .search-form {
+        margin-left: auto;
+    }
+
+    .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        padding: 0.6rem 1rem;
+        padding-right: 2.5rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #a777e3;
+        box-shadow: 0 0 0 2px rgba(167, 119, 227, 0.2);
+    }
+
+    .search-btn {
+        position: absolute;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .search-btn:hover {
+        color: #a777e3;
+    }
+
+    .chat-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .chat-actions {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .search-form {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
