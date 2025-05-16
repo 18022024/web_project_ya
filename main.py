@@ -8,6 +8,7 @@ from flask_login import LoginManager, current_user, login_user, login_required, 
 from flask_socketio import emit, SocketIO, join_room
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import check_password_hash
+from flasgger import Swagger, swag_from
 
 from app_key import MY_KEY
 from app import db_session
@@ -20,6 +21,15 @@ from forms.user import RegisterForm, LoginForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = MY_KEY
+
+app.config['SWAGGER'] = {
+    'title': 'Chat API',
+    'uiversion': 3,
+    'description': 'API documentation for the chat application',
+    'termsOfService': '',
+    'specs_route': '/swagger'
+}
+swagger = Swagger(app)
 
 socketio = SocketIO(app, async_mode='eventlet')
 
@@ -49,13 +59,34 @@ def handle_send_message(data):
 
 @app.route("/")
 def main_page():
+    """
+    Main page endpoint
+    ---
+    tags:
+      - Pages
+    responses:
+      200:
+        description: Returns the main page with all rooms
+    """
     db_sess = db_session.create_session()
     rooms = db_sess.query(Rooms).all()
     return render_template("main_page.html", rooms=rooms)
 
 
 @app.route("/profile")
+@login_required
 def profile_page():
+    """
+    User profile page
+    ---
+    tags:
+      - Pages
+    responses:
+      200:
+        description: Returns the profile page of the current user
+      401:
+        description: Unauthorized access
+    """
     db_sess = db_session.create_session()
     rooms = db_sess.query(Rooms).filter(Rooms.creator_id == current_user.id).all()
     return render_template("profile.html", user=current_user, rooms=rooms)
@@ -63,6 +94,38 @@ def profile_page():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    User registration endpoint
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - in: formData
+        name: username
+        type: string
+        required: true
+        description: The desired username
+      - in: formData
+        name: email
+        type: string
+        required: true
+        description: User's email address
+      - in: formData
+        name: password
+        type: string
+        required: true
+        description: User's password
+      - in: formData
+        name: confirm_password
+        type: string
+        required: true
+        description: Password confirmation
+    responses:
+      200:
+        description: Registration form or success message
+      302:
+        description: Redirect to main page after successful registration
+    """
     form = RegisterForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -92,6 +155,33 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    User login endpoint
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - in: formData
+        name: email
+        type: string
+        required: true
+        description: User's email address
+      - in: formData
+        name: password
+        type: string
+        required: true
+        description: User's password
+      - in: formData
+        name: remember
+        type: boolean
+        required: false
+        description: Remember me option
+    responses:
+      200:
+        description: Login form or success message
+      302:
+        description: Redirect to main page after successful login
+    """
     if current_user.is_authenticated:
         return redirect(url_for('main_page'))
 
@@ -115,6 +205,35 @@ def login():
 @app.route("/create_room", methods=['GET', 'POST'])
 @login_required
 def create_room():
+    """
+    Create a new room
+    ---
+    tags:
+      - Rooms
+    parameters:
+      - in: formData
+        name: name
+        type: string
+        required: true
+        description: Room name
+      - in: formData
+        name: is_private
+        type: boolean
+        required: false
+        description: Is the room private
+      - in: formData
+        name: password
+        type: string
+        required: false
+        description: Room password (if private)
+    responses:
+      200:
+        description: Room creation form or success message
+      302:
+        description: Redirect to main page after room creation
+      401:
+        description: Unauthorized access
+    """
     form = RoomForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -144,6 +263,25 @@ def create_room():
 @app.route("/delete_room/<int:room_id>", methods=['POST'])
 @login_required
 def delete_room(room_id):
+    """
+    Delete a room
+    ---
+    tags:
+      - Rooms
+    parameters:
+      - in: path
+        name: room_id
+        type: integer
+        required: true
+        description: ID of the room to delete
+    responses:
+      302:
+        description: Redirect to profile page after deletion
+      401:
+        description: Unauthorized access
+      404:
+        description: Room not found
+    """
     db_sess = db_session.create_session()
     room = db_sess.query(Rooms).filter(Rooms.id == room_id, Rooms.creator_id == current_user.id).first()
     accesses = db_sess.query(RoomAccess).filter(RoomAccess.room_id == room.id).all()
@@ -163,6 +301,23 @@ def delete_room(room_id):
 @app.route('/search')
 @login_required
 def search_rooms():
+    """
+    Search for rooms
+    ---
+    tags:
+      - Rooms
+    parameters:
+      - in: query
+        name: query
+        type: string
+        required: false
+        description: Search query
+    responses:
+      200:
+        description: Returns search results
+      401:
+        description: Unauthorized access
+    """
     query = request.args.get('query', '').strip()
     db_sess = db_session.create_session()
 
@@ -180,6 +335,32 @@ def search_rooms():
 
 @app.route('/enter_private_room/<int:room_id>', methods=['POST', 'GET'])
 def enter_private_room(room_id):
+    """
+    Enter a private room
+    ---
+    tags:
+      - Rooms
+    parameters:
+      - in: path
+        name: room_id
+        type: integer
+        required: true
+        description: ID of the private room
+      - in: formData
+        name: password
+        type: string
+        required: true
+        description: Room password
+    responses:
+      200:
+        description: Password form or redirect to room
+      302:
+        description: Redirect to room if access granted
+      401:
+        description: Unauthorized access
+      404:
+        description: Room not found
+    """
     db_sess = db_session.create_session()
     room = db_sess.get(Rooms, room_id)
     form = RoomAccessForm()
@@ -214,6 +395,25 @@ def enter_private_room(room_id):
 @app.route('/join_room/<int:room_id>')
 @login_required
 def join_room(room_id):
+    """
+    Join a room
+    ---
+    tags:
+      - Rooms
+    parameters:
+      - in: path
+        name: room_id
+        type: integer
+        required: true
+        description: ID of the room to join
+    responses:
+      200:
+        description: Returns the room page
+      302:
+        description: Redirect to main page if room not found
+      401:
+        description: Unauthorized access
+    """
     db_sess = db_session.create_session()
     room = db_sess.get(Rooms, room_id)
 
@@ -235,6 +435,17 @@ def load_user(user_id):
 @app.route('/logout')
 @login_required
 def logout():
+    """
+    Logout endpoint
+    ---
+    tags:
+      - Authentication
+    responses:
+      302:
+        description: Redirect to main page after logout
+      401:
+        description: Unauthorized access
+    """
     logout_user()
     return redirect(url_for('main_page'))
 
