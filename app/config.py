@@ -20,6 +20,7 @@ def config_app(app):
     from .routes.auth import auth_bp
     from .routes.main_profile_routes import main_bp
     from .routes.room_routes import rooms_bp
+    from .routes import socket_events
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)

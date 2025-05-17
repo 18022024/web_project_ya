@@ -4,8 +4,8 @@ from flask_login import current_user
 from flask_socketio import join_room, emit
 
 from app import db_session
+from app.extensions import socketio
 from app.models.messages import Messages
-from run import socketio
 
 
 @socketio.on('join_room')
