@@ -5,11 +5,11 @@
         <div class="chat-container">
             {% if current_user.is_authenticated %}
                 <div class="chat-actions">
-                    <a href="{{ url_for('create_room') }}" class="btn btn-create-room">
+                    <a href="{{ url_for('rooms.create_room') }}" class="btn btn-create-room">
                         <i class="fas fa-plus"></i> Создать комнату
                     </a>
 
-                <form method="GET" action="{{ url_for('search_rooms') }}" class="search-form">
+                <form method="GET" action="{{ url_for('rooms.search_rooms') }}" class="search-form">
                     <div class="search-container">
                         <input type="text" name="query" placeholder="Поиск комнат..."
                                value="{{ request.args.get('query', '') }}" class="search-input">
@@ -46,7 +46,7 @@
                                         </span>
                                     </div>
 
-                                    <a href="{% if room.is_private %}{{ url_for('enter_private_room', room_id=room.id) }}{% else %}{{ url_for('join_room', room_id=room.id) }}{% endif %}"
+                                    <a href="{% if room.is_private %}{{ url_for('rooms.enter_private_room', room_id=room.id) }}{% else %}{{ url_for('rooms.join_room', room_id=room.id) }}{% endif %}"
                                        class="btn-join">
                                         Присоединиться <i class="fas fa-arrow-right"></i>
                                     </a>

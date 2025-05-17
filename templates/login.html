@@ -199,7 +199,7 @@
 <body>
     <header class="header">
         <h1>
-            <a href="{{ url_for('main_page') }}" style="color: white; text-decoration: none;">
+            <a href="{{ url_for('other.main_page') }}" style="color: white; text-decoration: none;">
                 Online Chat by SEREGA
             </a>
         </h1>
@@ -221,7 +221,7 @@
                 {% endwith %}
             </div>
 
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="form-group">
@@ -246,7 +246,7 @@
             </form>
 
             <div class="auth-links">
-                Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a>
+                Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь</a>
             </div>
         </div>
     </main>

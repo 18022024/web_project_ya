@@ -35,7 +35,7 @@
             margin-bottom: 30px;
             font-size: 2rem;
             font-weight: 600;
-        }
+        }auth
 
         .form-group {
             margin-bottom: 25px;
@@ -174,7 +174,7 @@
     <div class="container">
         <h1>Создать новую комнату</h1>
 
-        <form method="POST" action="{{ url_for('create_room') }}">
+        <form method="POST" action="{{ url_for('rooms.create_room') }}">
             {{ form.hidden_tag() }}
 
             <div class="form-group">
